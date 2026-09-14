@@ -1787,13 +1787,13 @@
       if (custom.status === 'error') {
         return el(Tooltip, { label: [custom.message || t('unknownError'), ...clickRefreshTipLines(t, refresh)].join('; '), side: 'right', delayMs: 300 },
           el('div', { className: 'cm-foot clickable' + (wide ? '' : ' cm-foot-rail') + ' cm-bal-err' + (refresh.busy ? ' busy' : ''), ...clickableRefreshProps(refresh.busy, refresh.run) },
-            wide ? el(Fragment, null, label, ' ', el('span', { className: 'cm-num' }, t('queryFailed'))) : '⚠'))
+            wide ? el(Fragment, null, el('span', { className: 'cm-bal-label', title: label }, label), el('span', { className: 'cm-num cm-bal-amt' }, t('queryFailed'))) : '⚠'))
       }
       const amount = formatCustomBalanceMoney(custom.remaining, config, custom, entry)
       const detail = [customBalanceDetailText(custom, config, t, state, entry), ...clickRefreshTipLines(t, refresh)].join(' · ')
       return el(Tooltip, { label: detail, side: 'right', delayMs: 300 },
         el('div', { className: 'cm-foot clickable' + (wide ? '' : ' cm-foot-rail') + (refresh.busy ? ' busy' : ''), ...clickableRefreshProps(refresh.busy, refresh.run) },
-          wide ? el(Fragment, null, label, ' ', el('span', { className: 'cm-num' }, amount)) : el(WalletIcon, { size: 16 })))
+          wide ? el(Fragment, null, el('span', { className: 'cm-bal-label', title: label }, label), el('span', { className: 'cm-num cm-bal-amt' }, amount)) : el(WalletIcon, { size: 16 })))
     }
 
     function CornerChips(props) {
