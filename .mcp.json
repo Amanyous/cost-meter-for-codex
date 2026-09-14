@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "cost-meter": {
+      "cwd": ".",
+      "command": "node",
+      "args": ["./mcp/server.mjs"]
+    }
+  }
+}

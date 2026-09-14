@@ -1,0 +1,32 @@
+{
+  "name": "cost-meter-for-codex",
+  "version": "0.1.0",
+  "description": "Codex local session token and API-equivalent cost meter with an MCP Apps dashboard.",
+  "author": {
+    "name": "Amanyous",
+    "url": "https://github.com/Amanyous"
+  },
+  "homepage": "https://github.com/Amanyous/cost-meter-for-codex",
+  "repository": "https://github.com/Amanyous/cost-meter-for-codex",
+  "license": "MIT",
+  "keywords": ["codex", "cost", "usage", "tokens", "mcp", "dashboard"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Codex Cost Meter",
+    "shortDescription": "Track Codex token usage and API-equivalent cost",
+    "longDescription": "Tracks local Codex rollout token usage, prices each turn by its provider and model, and renders a conversation-embedded MCP Apps dashboard.",
+    "developerName": "Amanyous",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write", "Interactive"],
+    "websiteURL": "https://github.com/Amanyous/cost-meter-for-codex",
+    "privacyPolicyURL": "https://github.com/Amanyous/cost-meter-for-codex/blob/master/SECURITY.md",
+    "termsOfServiceURL": "https://github.com/Amanyous/cost-meter-for-codex/blob/master/LICENSE",
+    "defaultPrompt": [
+      "Show my Codex token usage and estimated cost.",
+      "Render the Codex cost dashboard.",
+      "How much did this Codex session cost?"
+    ],
+    "brandColor": "#4176E6"
+  }
+}
