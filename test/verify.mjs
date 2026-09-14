@@ -6552,6 +6552,7 @@ function m_costOf85(entry, tokens) {
 
 await import('./aliyun-balance.mjs')
 await import('./gateway-retry.mjs')
+await import('./go-credentials.mjs')
 await import('./custom-balance-ui.mjs')
 await import('./settings-regressions.mjs')
 await import('./scoped-billing.mjs')
