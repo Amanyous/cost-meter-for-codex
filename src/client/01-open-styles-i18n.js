@@ -287,7 +287,8 @@ window.__ModuleLoader__.load({
       '.cm-dir-row .cm-input{flex:1 1 60%;width:auto}',
       '.cm-bbox-fill{height:100%;border-radius:999px;background:var(--dsw-alias-state-business-primary)}',
       '.cm-balance-name{display:inline-flex;align-items:center;gap:4px;min-width:0}',
-      '.cm-bal-amt{margin-left:auto;text-align:right}',
+      '.cm-bal-label{min-width:0;overflow:hidden;text-overflow:ellipsis}',
+      '.cm-bal-amt{margin-left:auto;text-align:right;flex-shrink:0}',
       '.cm-bbox-pct.cm-bal-amt{color:var(--dsw-alias-state-business-primary)}',
       // 官方余额旁的充值直达链接(issue #59):低调小图标,悬停点亮;stopPropagation 防触发点击刷新。
       '.cm-bal-link{flex:none;display:inline-flex;align-items:center;justify-content:center;padding:2px;border-radius:4px;font-size:12px;line-height:16px;color:var(--dsw-alias-label-tertiary);text-decoration:none;outline:none}',
