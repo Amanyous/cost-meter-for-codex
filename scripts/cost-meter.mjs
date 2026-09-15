@@ -74,7 +74,12 @@ if (scope === 'float') {
   const root = join(dirname(fileURLToPath(import.meta.url)), '..')
   const electron = await resolveElectron(root)
   if (!electron) {
-    process.stderr.write('Electron is not installed. Run `pnpm install` in the plugin repository.\n')
+    process.stderr.write([
+      'Electron is not installed, or its binary download did not finish (the floating window needs it).',
+      'Fix: run `pnpm install` in the plugin directory; if the binary download fails, retry with a mirror:',
+      '  ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm rebuild electron',
+      '',
+    ].join('\n'))
     process.exit(1)
   }
   const child = spawn(electron, [join(root, 'scripts', 'floating-window.mjs')], { detached: true, stdio: 'ignore' })
