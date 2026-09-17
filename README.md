@@ -28,7 +28,15 @@
    codex features enable mcp_2026_07_28
    ```
    然后启动 Codex，执行 `/hooks` 信任 `SessionStart` / `Stop` / `SubagentStop`。详见 [排障说明](docs/codex-plugin.md)。
-2. **悬浮窗依赖 Electron**：`electron` 是运行期依赖（首次安装需下载 ~100MB，安装后约 280MB）。插件安装目录是 pnpm 虚拟存储，`float` 已做解析回退（`.pnpm/electron@*/node_modules/electron`），但 Electron 未装好时窗口起不来——面板与 CLI 仍可用。
+2. **悬浮窗依赖 Electron**：`electron` 是运行期依赖（首次安装需从 GitHub releases 下载 ~100MB 二进制，安装后约 280MB）。下载失败时 `float` 会直接报错退出（面板与 CLI 不受影响）。国内网络建议用镜像重装：
+
+   ```bash
+   ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm install
+   # 已经装过依赖时：
+   ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm rebuild electron
+   ```
+
+   插件安装目录是 pnpm 虚拟存储，`float` 已做解析回退（`.pnpm/electron@*/node_modules/electron`）；macOS 上用 `/usr/bin/open -n -a <Electron.app>` 启动，避免 LaunchServices 复用已有实例。
 3. **hooks 需要手动信任**：未信任时不自动记账、不自动弹窗（手动查询与面板仍可用）。
 4. **对话内面板依赖两个 under-development feature**：`enable_mcp_apps` 与 `mcp_2026_07_28`。它们是 Codex 的实验开关，升级 Codex 或配置被覆盖后需要重新 enable。
 5. **金额是 API 等价估算**：订阅套餐不暴露单次调用金额，统计的是按公开价目表折算的等价费用。官方余额接口返回的数值与官网展示口径可能不同（官网含赠送 / 充值的拆分），以官网为准。

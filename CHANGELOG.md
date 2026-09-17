@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- 从仓库全新克隆安装的验证：`npm test` / `npm run test:codex` 全绿；`float` 在 Electron 二进制未下载完成时给出明确报错与镜像修复命令（`ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm rebuild electron`），README 补充该已知问题。
 - 悬浮窗改为开机自动弹出：`SessionStart` hook（startup/resume）调用幂等的 `cost-meter float`，靠 `floating-window.pid` 判断是否已在运行；并修复插件虚拟存储下 electron 无法解析导致窗口起不来的问题。
 - 修复完整状态与轻量轮询合并导致的额度、历史、模型页缺失问题；切页按需加载完整数据。
 - 修复会话日志轮转后零点用量不入账：同步所有同线程分片并更新活动 transcript 指针。
