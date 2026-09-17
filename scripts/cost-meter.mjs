@@ -77,7 +77,11 @@ if (scope === 'float') {
     process.stderr.write('Electron is not installed. Run `pnpm install` in the plugin repository.\n')
     process.exit(1)
   }
-  const child = spawn(electron, [join(root, 'scripts', 'floating-window.mjs')], { detached: true, stdio: 'ignore' })
+  const app = join(root, 'scripts', 'floating-window.mjs')
+  const child = process.platform === 'darwin'
+    // LaunchServices otherwise reuses another Electron.app instance and drops our app path.
+    ? spawn('/usr/bin/open', ['-n', '-a', dirname(dirname(dirname(electron))), '--args', `--app=${app}`], { detached: true, stdio: 'ignore' })
+    : spawn(electron, [app], { detached: true, stdio: 'ignore' })
   child.unref()
   if (values.json) process.stdout.write(JSON.stringify({ running: true, pid: child.pid }) + '\n')
   else process.stdout.write('Codex Cost Meter floating window started.\n')
