@@ -76,15 +76,27 @@ function peakInfo() {
   const peak = state?.meta?.peak
   if (!peak) return null
   const now = Date.now()
-  const remaining = Math.max(0, Number(peak.nextAtMs) - now)
+  const nextAtMs = Number(peak.nextAtMs)
+  if (!Number.isFinite(nextAtMs)) return null
+  const remaining = Math.max(0, nextAtMs - now)
   const seconds = Math.floor(remaining / 1000)
-  const text = [Math.floor(seconds / 3600), Math.floor(seconds % 3600 / 60)].map(value => String(value).padStart(2, '0')).join(':')
-  const duration = Math.max(1, Number(peak.nextAtMs) - Number(peak.prevAtMs))
-  const progress = Math.max(0, Math.min(100, (now - Number(peak.prevAtMs)) / duration * 100))
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor(seconds % 86400 / 3600)
+  const minutes = Math.floor(seconds % 3600 / 60)
+  const durationText = days ? `${days}天${hours}小时${minutes}分` : hours ? `${hours}小时${minutes}分` : `${minutes}分`
+  const when = new Intl.DateTimeFormat('zh-CN', {
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Shanghai',
+  }).format(new Date(nextAtMs)).replace(/^(周.)(?=\d)/, '$1 ')
+  const windowDuration = Math.max(1, nextAtMs - Number(peak.prevAtMs))
+  const progress = Math.max(0, Math.min(100, (now - Number(peak.prevAtMs)) / windowDuration * 100))
   return {
     current: peak.inPeak ? '峰时' : '平价',
     next: peak.nextIntoPeak ? '峰时' : '平价',
-    countdown: text,
+    countdown: `${when} · ${durationText}后`,
     progress,
     weekend: peak.weekend === true,
     inPeak: peak.inPeak === true,

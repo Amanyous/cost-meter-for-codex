@@ -12,6 +12,19 @@ const UI_URI = 'ui://cost-meter/dashboard-v1.html'
 const UI_MIME = 'text/html;profile=mcp-app'
 const UI_PATH = join(root, 'lib', 'codex-ui.html')
 const meter = createCostMeter()
+
+export function threadIdFromMeta(meta = {}) {
+  if (!meta || typeof meta !== 'object') return undefined
+  for (const key of ['openai/threadId', 'openai/thread_id', 'codexThreadId', 'codex_thread_id', 'threadId', 'thread_id']) {
+    if (typeof meta[key] === 'string' && meta[key].trim()) return meta[key].trim()
+  }
+  const raw = meta['x-codex-turn-metadata']
+  try {
+    const turn = typeof raw === 'string' ? JSON.parse(raw) : raw
+    if (typeof turn?.thread_id === 'string' && turn.thread_id.trim()) return turn.thread_id.trim()
+  } catch {}
+  return typeof meta.thread?.id === 'string' && meta.thread.id.trim() ? meta.thread.id.trim() : undefined
+}
 const codexHome = resolve(process.env.CODEX_HOME || join(homedir(), '.codex'))
 
 function send(message) {
@@ -132,11 +145,14 @@ export const tools = [
   },
 ]
 
-export async function callTool(name, args = {}) {
+export async function callTool(name, args = {}, meta = {}) {
+  const metaThreadId = threadIdFromMeta(meta)
+  const threadId = args.threadId || metaThreadId
+  if (metaThreadId) meter.setActiveThread(metaThreadId)
   if (name === 'cost_status') {
     const state = await meter.status({
       scope: args.scope,
-      threadId: args.threadId,
+      threadId,
       cwd: args.cwd,
       transcriptPath: args.transcriptPath ? assertTranscriptPath(args.transcriptPath) : undefined,
       sync: args.sync === true,
@@ -150,9 +166,10 @@ export async function callTool(name, args = {}) {
 
   if (name === 'record_turn') {
     const transcriptPath = assertTranscriptPath(args.transcript_path)
-    const synced = args.session_id ? await meter.syncThread(args.session_id) : await meter.syncFile(transcriptPath)
+    const sessionId = args.session_id || metaThreadId
+    const synced = sessionId ? await meter.syncThread(sessionId) : await meter.syncFile(transcriptPath)
     meter.setActiveSession({
-      threadId: args.session_id,
+      threadId: sessionId,
       turnId: args.turn_id,
       transcriptPath: synced.latest || transcriptPath,
       cwd: args.cwd,
@@ -166,7 +183,7 @@ export async function callTool(name, args = {}) {
   }
 
   if (name === 'render_cost_dashboard') {
-    const state = args.snapshot && typeof args.snapshot === 'object' ? args.snapshot : await meter.status({ scope: 'session' })
+    const state = args.snapshot && typeof args.snapshot === 'object' ? args.snapshot : await meter.status({ scope: 'session', threadId })
     return {
       content: [{ type: 'text', text: summaryText(state) }],
       structuredContent: state,
@@ -175,45 +192,45 @@ export async function callTool(name, args = {}) {
 
   if (name === 'cost_ui_action') {
     if (args.action === 'refresh') {
-      const state = await meter.refreshActive({ scope: 'session' })
+      const state = await meter.refreshActive({ scope: 'session', threadId })
       return { content: [{ type: 'text', text: summaryText(state) }], structuredContent: state }
     }
     if (args.action === 'poll') {
-      const state = await meter.status({ scope: 'session', lite: true })
+      const state = await meter.status({ scope: 'session', lite: true, threadId })
       return { content: [{ type: 'text', text: summaryText(state) }], structuredContent: state }
     }
     if (args.action === 'refresh_balances') {
       await meter.refreshBalances()
-      const state = await meter.status({ scope: 'session', lite: true })
+      const state = await meter.status({ scope: 'session', lite: true, threadId })
       return { content: [{ type: 'text', text: summaryText(state) }], structuredContent: state }
     }
     if (args.action === 'sync_prices') {
       const result = await meter.syncPrices({ locale: readConfig(meter.dataDir)?.locale })
-      const state = await meter.status({ scope: 'session' })
+      const state = await meter.status({ scope: 'session', threadId })
       return { content: [{ type: 'text', text: `已同步官方价格：${Object.keys(result.models).length} 个模型。\n${summaryText(state)}` }], structuredContent: state }
     }
     if (args.action === 'import_dsh' && typeof args.path === 'string') {
       const imported = await meter.importDsh(args.path)
-      const state = await meter.status({ scope: 'session' })
+      const state = await meter.status({ scope: 'session', threadId })
       return { content: [{ type: 'text', text: `已导入 ${imported.added} 条 DSH 记录。\n${summaryText(state)}` }], structuredContent: state }
     }
     if (args.action === 'reset_history') {
       await meter.resetHistory()
-      const state = await meter.status({ scope: 'session' })
+      const state = await meter.status({ scope: 'session', threadId })
       return { content: [{ type: 'text', text: `已清除本地账本。\n${summaryText(state)}` }], structuredContent: state }
     }
     if (args.action === 'sync') {
       const synced = await meter.sync()
-      const state = await meter.status({ scope: 'session' })
+      const state = await meter.status({ scope: 'session', threadId })
       return { content: [{ type: 'text', text: `已同步 ${synced.added} 条记录。\n${summaryText(state)}` }], structuredContent: state }
     }
     if (args.action === 'update_config' && args.patch && typeof args.patch === 'object') {
       writeConfig(meter.dataDir, args.patch)
-      const state = await meter.status({ scope: 'session' })
+      const state = await meter.status({ scope: 'session', lite: true, threadId })
       return { content: [{ type: 'text', text: summaryText(state) }], structuredContent: state }
     }
     if (args.action === 'day_sessions') {
-      const state = await meter.status({ scope: 'session' })
+      const state = await meter.status({ scope: 'session', threadId })
       const day = state.history.find(item => item.date === args.date)
       return { content: [{ type: 'text', text: `已读取 ${args.date} 的会话明细。` }], structuredContent: day || { date: args.date, sessions: [] } }
     }
@@ -247,7 +264,7 @@ export async function dispatch(message) {
     }
     if (method === 'ping') return { jsonrpc: '2.0', id, result: {} }
     if (method === 'tools/list') return { jsonrpc: '2.0', id, result: { tools } }
-    if (method === 'tools/call') return { jsonrpc: '2.0', id, result: await callTool(params?.name, params?.arguments || {}) }
+    if (method === 'tools/call') return { jsonrpc: '2.0', id, result: await callTool(params?.name, params?.arguments || {}, params?._meta || {}) }
     if (method === 'resources/list') return { jsonrpc: '2.0', id, result: { resources: [{ uri: UI_URI, name: 'Codex 费用面板', title: 'Codex Cost Meter', description: 'Codex token and API-equivalent cost dashboard', mimeType: UI_MIME, _meta: widgetMeta() }] } }
     if (method === 'resources/read') {
       if (params?.uri !== UI_URI) throw new Error(`Unknown resource: ${params?.uri || ''}`)

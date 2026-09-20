@@ -26,7 +26,7 @@ writeFileSync(rollout, records.map(record => JSON.stringify(record)).join('\n') 
 
 process.env.CODEX_HOME = codexHome
 process.env.PLUGIN_DATA = dataDir
-const { dispatch } = await import('../mcp/server.mjs')
+const { dispatch, threadIdFromMeta } = await import('../mcp/server.mjs')
 let id = 0
 const call = async (method, params = {}) => {
   const response = await dispatch({ jsonrpc: '2.0', id: ++id, method, params })
@@ -45,10 +45,22 @@ try {
   const cli = readFileSync(new URL('../scripts/cost-meter.mjs', import.meta.url), 'utf8')
   assert.match(cli, /floating-window\.pid/)
   assert.match(cli, /resolveElectron/)
-  assert.match(cli, /--app=/)
   assert.match(cli, /spawn\('\/usr\/bin\/open', \['-n'/)
-  assert.match(cli, /--args/)
+  assert.match(cli, /\['-n', '-a', dirname\(dirname\(dirname\(electron\)\)\), '--args', app\]/)
   assert.match(cli, /spawn\(electron, \[app\]/)
+  const macAutostart = readFileSync(new URL('../scripts/macos-autostart.mjs', import.meta.url), 'utf8')
+  assert.match(macAutostart, /com\.openai\.codex/)
+  assert.match(macAutostart, /com\.bigpizzav3\.codexplusplus/)
+  assert.match(macAutostart, /cost-meter\.mjs.*float/)
+  assert.match(macAutostart, /cost-meter\.mjs.*sync/)
+  assert.match(macAutostart, /Library.*LaunchAgents|LaunchAgents/)
+  assert.match(macAutostart, /--watch/)
+  assert.match(macAutostart, /<key>KeepAlive<\/key>/)
+  const server = readFileSync(new URL('../mcp/server.mjs', import.meta.url), 'utf8')
+  assert.match(server, /action === 'update_config'[\s\S]*lite: true/)
+  const dashboard = readFileSync(new URL('../src/codex-ui/dashboard.js', import.meta.url), 'utf8')
+  assert.match(dashboard, /Asia\/Shanghai/)
+  assert.match(dashboard, /durationText/)
   const floatingWindow = readFileSync(new URL('../scripts/floating-window.mjs', import.meta.url), 'utf8')
   assert.match(floatingWindow, /alwaysOnTop: true/)
   assert.match(floatingWindow, /cost-meter:bridge/)
@@ -62,7 +74,8 @@ try {
 
   const recorded = await call('tools/call', { name: 'record_turn', arguments: { transcript_path: rollout } })
   assert.equal(recorded.structuredContent.added, 1)
-
+  assert.equal(threadIdFromMeta({ 'x-codex-turn-metadata': JSON.stringify({ thread_id: 'thread-meta' }) }), 'thread-meta')
+  assert.equal(threadIdFromMeta({ openai: { threadId: 'wrong' }, 'openai/threadId': 'thread-direct' }), 'thread-direct')
   const ui = await call('resources/read', { uri: 'ui://cost-meter/dashboard-v1.html' })
   assert.equal(ui.contents[0].mimeType, 'text/html;profile=mcp-app')
   assert.match(ui.contents[0].text, /cm-codex-shell/)
@@ -74,6 +87,18 @@ try {
   assert.equal(polled.structuredContent.session.id, 'thread-mcp')
   assert.equal(polled.structuredContent.history, undefined)
   assert.ok(status.structuredContent.session.costUsd > 0)
+  const switched = await dispatch({
+    jsonrpc: '2.0',
+    id: ++id,
+    method: 'tools/call',
+    params: {
+      name: 'cost_status',
+      arguments: {},
+      _meta: { 'x-codex-turn-metadata': JSON.stringify({ thread_id: 'thread-switched' }) },
+    },
+  })
+  assert.equal(switched.result.structuredContent.session.id, 'thread-switched')
+  assert.equal(switched.result.structuredContent.session.calls, 0)
 } finally {
   rmSync(root, { recursive: true, force: true })
 }

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- 修复费用面板保存设置卡顿：状态聚合重复创建时区格式化器，完整刷新由数十秒降至约 2 秒，配置保存改用轻量状态。
+- 修复今天使用记录为 0：macOS 常驻启动脚本每 60 秒增量同步 Codex 会话日志，不再只依赖 Stop hook。
+- 峰谷倒计时改为明确的北京时间与时长，例如“周一 09:00 · 40小时26分后”。
+- 修复切换对话后“本会话费用”沿用旧对话：从 MCP 请求元数据读取当前 thread ID，未知会话显示空费用。
+- macOS 新增登录自启动：登录后打开 Codex 与 Codex++，常驻监控 Codex 重开并幂等拉起费用悬浮窗（`npm run autostart:mac`）。
 - 从仓库全新克隆安装的验证：`npm test` / `npm run test:codex` 全绿；`float` 在 Electron 二进制未下载完成时给出明确报错与镜像修复命令（`ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ pnpm rebuild electron`），README 补充该已知问题。
 - 悬浮窗改为开机自动弹出：`SessionStart` hook（startup/resume）调用幂等的 `cost-meter float`，靠 `floating-window.pid` 判断是否已在运行；并修复插件虚拟存储下 electron 无法解析导致窗口起不来的问题。
 - 修复完整状态与轻量轮询合并导致的额度、历史、模型页缺失问题；切页按需加载完整数据。

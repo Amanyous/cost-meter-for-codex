@@ -99,7 +99,8 @@
     "scripts/build-codex-ui.mjs",
     "scripts/cost-meter.mjs",
     "scripts/floating-window.mjs",
-    "scripts/floating-preload.cjs"
+    "scripts/floating-preload.cjs",
+    "scripts/macos-autostart.mjs"
   ],
   "dependencies": {
     "electron": "44.3.0",
@@ -145,7 +146,8 @@
     "build:codex-ui": "node scripts/build-codex-ui.mjs",
     "test:codex": "node scripts/build-codex-ui.mjs && node test/codex-session-usage.mjs && node test/codex-mcp.mjs",
     "test:all": "npm test && npm run test:codex",
-    "float": "node scripts/cost-meter.mjs float"
+    "float": "node scripts/cost-meter.mjs float",
+    "autostart:mac": "node scripts/macos-autostart.mjs --install"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-credentials": "0.1.0-rc.8",

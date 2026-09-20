@@ -76,6 +76,12 @@ codex features enable mcp_2026_07_28
 
 > 首次在源码仓库开发时还需要 `pnpm install`（会下载 Electron）。
 
+macOS 登录自启动（打开 Codex 与 Codex++，并在每次打开 Codex 时拉起悬浮窗）：
+
+```bash
+npm run autostart:mac
+```
+
 ## 使用
 
 | 场景 | 做法 |
