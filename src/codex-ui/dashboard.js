@@ -100,7 +100,15 @@ function peakInfo() {
     progress,
     weekend: peak.weekend === true,
     inPeak: peak.inPeak === true,
+    fromMs: Number(peak.prevAtMs),
+    toMs: nextAtMs,
   }
+}
+
+// 坐标轴显示当前时段的起止时刻，避免把「峰时/平价」图例误读成进度区间
+function clockOf(ms) {
+  if (!Number.isFinite(ms)) return ''
+  return new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' }).format(new Date(ms))
 }
 
 function peakTimeline() {
@@ -111,8 +119,8 @@ function peakTimeline() {
       <span class="cm-peak-current" data-peak-now>${info.weekend ? '周末全谷价 · ' : ''}当前 ${info.current}</span>
       <span class="cm-peak-next" data-peak-next>下一时段 ${info.next} · ${info.countdown}</span><span class="cm-peak-progress" data-peak-progress>进度 ${info.progress.toFixed(0)}%</span>
     </div>
-    <div class="cm-codex-peak-track"><i class="cm-codex-peak-marker" data-peak-marker style="left:${info.progress}%"></i></div>
-    <div class="cm-codex-peak-axis"><span>峰时</span><span>平价</span></div>
+    <div class="cm-codex-peak-track"><i class="cm-codex-peak-fill" data-peak-fill style="width:${info.progress}%"></i><i class="cm-codex-peak-marker" data-peak-marker style="left:${info.progress}%"></i></div>
+    <div class="cm-codex-peak-axis"><span>${clockOf(info.fromMs)}</span><span>${clockOf(info.toMs)}</span></div>
   </div>`
 }
 
@@ -471,6 +479,7 @@ setInterval(() => {
   document.querySelectorAll('[data-peak-now]').forEach(node => { node.textContent = `${info.weekend ? '周末全谷价 · ' : ''}当前 ${info.current}` })
   document.querySelectorAll('[data-peak-next]').forEach(node => { node.textContent = `下一时段 ${info.next} · ${info.countdown}` })
   document.querySelectorAll('[data-peak-marker]').forEach(node => { node.style.left = `${info.progress}%` })
+  document.querySelectorAll('[data-peak-fill]').forEach(node => { node.style.width = `${info.progress}%` })
   document.querySelectorAll('[data-peak-progress]').forEach(node => { node.textContent = `进度 ${info.progress.toFixed(0)}%` })
   document.querySelectorAll('[data-peak-strip]').forEach(node => node.classList.toggle('peak', info.inPeak))
 }, 30000)
